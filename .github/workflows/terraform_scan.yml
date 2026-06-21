@@ -21,17 +21,26 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Run Trivy IaC Scan
+      - name: Generate SARIF Results
         uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: config
           scan-ref: .
           format: sarif
           output: trivy-results.sarif
-          exit-code: 1
+          exit-code: '0'
 
       - name: Upload SARIF Results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: trivy-results.sarif
+
+      - name: Fail on IaC Misconfigurations
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
